@@ -26,11 +26,11 @@ class Wall:
         vertices = [(v[0], SCREEN_HEIGHT - v[1]) for v in vertices]
         pygame.draw.polygon(screen, self.color, vertices)
 
-class Exit:
-    def __init__(self, position, width=1, terminal=False):
+class Doorway:
+    def __init__(self, position, width=1, active=True):
         self.position = position
         self.width = width
-        self.is_terminal = terminal
+        self.is_active = active
         self.rooms = ()
         self.distance = 0
 
@@ -41,46 +41,85 @@ class Exit:
         :param (Room) room2:
         """
         self.rooms = (room1, room2)
-        diff_x1 = room1.com[0]-self.position[0]
-        diff_y1 = room1.com[1] - self.position[1]
-        diff_x2 = room2.com[0] - self.position[0]
-        diff_y2 = room2.com[1] - self.position[1]
+        diff_x1 = room1.position[0] - self.position[0]
+        diff_y1 = room1.position[1] - self.position[1]
+        diff_x2 = room2.position[0] - self.position[0]
+        diff_y2 = room2.position[1] - self.position[1]
+        diff_x_total = room1.position[0] - room2.position[0]
+        diff_y_total = room1.position[1] - room2.position[1]
         self.distance = math.sqrt(diff_x1**2+diff_y1**2)+math.sqrt(diff_x2**2+diff_y2**2)
+        self.distance = math.sqrt(diff_x_total**2+diff_y_total**2)
+
+    def set_exit(self, room):
+        self.rooms = (room, BuildingExit(self))
+
 
 class Room:
-    def __init__(self, walls, exits):
+    def __init__(self, walls, doorways, name='room'):
+        self.name = name
         self.walls = walls
-        self.exits = exits
+        self.doorways = doorways
+        self.is_outside = False
+        self.is_dangerous = False
         min_x = 99999999
         max_x = -99999999
         min_y = 99999999
         max_y = -99999999
 
-        for wall in walls:
-            min_x = min(min_x, wall.body.position[0])
-            max_x = max(max_x, wall.body.position[0])
-            min_y = min(min_y, wall.body.position[1])
-            max_y = max(max_y, wall.body.position[1])
-        self.com = ((min_x+max_x)/2, (min_y+max_y)/2)
+        for doorway in doorways:
+            min_x = min(min_x, doorway.position[0])
+            max_x = max(max_x, doorway.position[0])
+            min_y = min(min_y, doorway.position[1])
+            max_y = max(max_y, doorway.position[1])
+        self.position = ((min_x + max_x) / 2, (min_y + max_y) / 2)
 
     def draw(self, screen, render_settings):
         for wall in self.walls:
             wall.draw(screen, render_settings)
 
     def get_adjacent_rooms(self):
-        adjacent_rooms = []
-        for exit in self.exits:
-            for room in exit.rooms:
+        adjacent_rooms = {}
+        for doorway in self.doorways:
+            for room in doorway.rooms:
                 if room is not self:
-                    adjacent_rooms.append(room)
+                    adjacent_rooms[doorway] = room
+        return adjacent_rooms
 
-def create_room(world,  north_wall, west_wall, south_wall, east_wall, north_exits=None, west_exits=None, south_exits=None, east_exits=None):
-    if north_exits is None and west_exits is None and south_exits is None and east_exits is None:
-        raise ValueError('room must have at least one exit')
-    north_exits = sorted(north_exits, key=lambda exit: exit.position[0])
-    west_exits = sorted(west_exits, key=lambda exit: exit.position[1])
-    south_exits = sorted(south_exits, key=lambda exit: exit.position[0])
-    east_exits = sorted(east_exits, key=lambda exit: exit.position[1])
+    def get_doorway(self, room):
+        for doorway in self.doorways:
+            if room in doorway.rooms:
+                return doorway
+
+    def set_dangerous(self):
+        self.is_dangerous = True
+
+    def __lt__(self, room):
+        return False
+
+    def __str__(self):
+        return self.name
+
+class BuildingExit(Room):
+    def __init__(self, exit):
+        super().__init__(walls=[], doorways=[exit], name='exit')
+        self.com = exit.position
+        self.is_outside = True
+
+def create_room(world,  north_wall, west_wall, south_wall, east_wall, north_doorways=None, west_doorways=None, south_doorways=None, east_doorways=None):
+    if north_doorways is None and west_doorways is None and south_doorways is None and east_doorways is None:
+        raise ValueError('room must have at least one doorway')
+    if north_doorways is None:
+        north_doorways = []
+    if west_doorways is None:
+        west_doorways = []
+    if south_doorways is None:
+        south_doorways = []
+    if east_doorways is None:
+        east_doorways = []
+    north_doorways = sorted(north_doorways, key=lambda doorway: doorway.position[0])
+    west_doorways = sorted(west_doorways, key=lambda doorway: doorway.position[1])
+    south_doorways = sorted(south_doorways, key=lambda doorway: doorway.position[0])
+    east_doorways = sorted(east_doorways, key=lambda doorway: doorway.position[1])
 
     ne_corner = (east_wall, north_wall)
     nw_corner = (west_wall, north_wall)
@@ -89,51 +128,54 @@ def create_room(world,  north_wall, west_wall, south_wall, east_wall, north_exit
 
     walls = []
     last_point = nw_corner
-    for north_exit in north_exits:
-        exit_border_west = (north_exit.position[0]-north_exit.width/2, north_exit.position[1])
-        walls.append(Wall(world, last_point, exit_border_west))
-        last_point = (north_exit.position[0]+north_exit.width/2, north_exit.position[1])
+    for north_doorway in north_doorways:
+        doorway_border_west = (north_doorway.position[0]-north_doorway.width/2, north_doorway.position[1])
+        walls.append(Wall(world, last_point, doorway_border_west))
+        last_point = (north_doorway.position[0]+north_doorway.width/2, north_doorway.position[1])
     walls.append(Wall(world, last_point, ne_corner))
 
     last_point = sw_corner
-    for west_exit in west_exits:
-        exit_border_south = (west_exit.position[0], west_exit.position[1]-west_exit.width/2)
-        walls.append(Wall(world, last_point, exit_border_south))
-        last_point = (west_exit.position[0], west_exit.position[1]+west_exit.width/2)
+    for west_doorway in west_doorways:
+        doorway_border_south = (west_doorway.position[0], west_doorway.position[1]-west_doorway.width/2)
+        walls.append(Wall(world, last_point, doorway_border_south))
+        last_point = (west_doorway.position[0], west_doorway.position[1]+west_doorway.width/2)
     walls.append(Wall(world, last_point, nw_corner))
 
     last_point = sw_corner
-    for south_exit in south_exits:
-        exit_border_west = (
-        south_exit.position[0] - south_exit.width / 2, south_exit.position[1])
-        walls.append(Wall(world, last_point, exit_border_west))
-        last_point = (south_exit.position[0] + south_exit.width / 2, south_exit.position[1])
+    for south_doorway in south_doorways:
+        doorway_border_west = (
+        south_doorway.position[0] - south_doorway.width / 2, south_doorway.position[1])
+        walls.append(Wall(world, last_point, doorway_border_west))
+        last_point = (south_doorway.position[0] + south_doorway.width / 2, south_doorway.position[1])
     walls.append(Wall(world, last_point, se_corner))
 
     last_point = se_corner
-    for east_exit in east_exits:
-        exit_border_south = (
-        east_exit.position[0], east_exit.position[1] - east_exit.width / 2)
-        walls.append(Wall(world, last_point, exit_border_south))
-        last_point = (east_exit.position[0], east_exit.position[1] + east_exit.width / 2)
+    for east_doorway in east_doorways:
+        doorway_border_south = (
+        east_doorway.position[0], east_doorway.position[1] - east_doorway.width / 2)
+        walls.append(Wall(world, last_point, doorway_border_south))
+        last_point = (east_doorway.position[0], east_doorway.position[1] + east_doorway.width / 2)
     walls.append(Wall(world, last_point, ne_corner))
-    return Room(walls=walls, exits=north_exits+west_exits+south_exits+east_exits)
+    return Room(walls=walls, doorways=north_doorways + west_doorways + south_doorways + east_doorways)
+
 
 class Building:
-    def __init__(self, rooms, exits):
+    def __init__(self, rooms, doorways):
         self.rooms = rooms
-        for exit in exits:
-            rooms = []
+        for doorway in doorways:
+            rooms_connected = []
             for room in rooms:
-                if exit in room.exits:
-                    rooms.append(room)
-            if len(rooms) == 2:
-                exit.set_rooms(rooms[0], rooms[1])
-            if len(rooms) == 1:
-                exit.is_terminal = True
-        self.exits = exits
+                if doorway in room.doorways:
+                    rooms_connected.append(room)
+            if len(rooms_connected) == 2:
+                doorway.set_rooms(rooms_connected[0], rooms_connected[1])
+            if len(rooms_connected) == 1:
+                doorway.set_exit(rooms_connected[0])
+        self.doorways = doorways
 
-
+    def draw(self, screen, render_settings):
+        for room in self.rooms:
+            room.draw(screen, render_settings)
 
 
 if __name__ == '__main__':
@@ -147,7 +189,14 @@ if __name__ == '__main__':
     world = world(gravity=(0, -10), doSleep=True)
     # wall = Wall(world, (0,0), (31, 20))
     # room = Room1out(world, (10,10), 20,20)
-    room = create_room(world, 20,10,0,30, [], [], [], east_exits=[Exit((30,10), 4), Exit((30,15), 1)])
+    doorways = [Doorway((10, 8)), Doorway((10, 12)), Doorway((20, 5)), Doorway((20, 15)), Doorway((30, 5))]
+    room1 = create_room(world, 15, 0, 5, 10, east_doorways=[doorways[0], doorways[1]])
+    room2 = create_room(world, 20, 10, 10, 20, west_doorways=[doorways[1]], east_doorways=[doorways[3]])
+    room3 = create_room(world, 10, 10, 0, 20, west_doorways=[doorways[0]], east_doorways=[doorways[2]])
+    room4 = create_room(world, 20, 20, 10, 30, west_doorways=[doorways[3]])
+    room5 = create_room(world, 10, 20, 0, 30, west_doorways=[doorways[2]], east_doorways=[doorways[4]])
+    # room = create_room(world, 20,10,0,30, [], [], [], east_exits=[Exit((30,10), 4), Exit((30,15), 1)])
+    building = Building(rooms=[room1, room2, room3, room4, room5], doorways=doorways)
     running = True
     while running:
         # Check the event queue
@@ -159,7 +208,7 @@ if __name__ == '__main__':
 
         screen.fill((0, 0, 0, 0))
         # Draw the world
-        room.draw(screen, render_settings)
+        building.draw(screen, render_settings)
 
         # Make Box2D simulate the physics of our world for one step.
         world.Step(render_settings['TIME_STEP'], 10, 10)

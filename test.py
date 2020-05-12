@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # Create the world
     world = world(gravity=(0, 0), doSleep=True)
     # wall = Wall(world, (0,0), (31, 20))
-    room = create_room(world, 20,10,0,30, [], [], [], east_exits=[Exit((30,10), 1), Exit((30,15), 1)])
+    room = create_room(world, 20, 10, 0, 30, [], [], [], east_exits=[Doorway((30, 10), 1), Doorway((30, 15), 1)])
     num_agents = 30
     agents = [AgentBody(world, x,y) for x,y in [(random.randint(1, 19), random.randint(1, 19)) for i in range(num_agents)]]
     running = True
