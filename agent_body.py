@@ -22,7 +22,7 @@ class AgentBody:
     def apply_force(self, force, point, wake=True):
         self.body.ApplyForce(force=force, point=point, wake=wake)
 
-    def move_to_exit(self, exit, strength=1):
+    def force_to_exit(self, exit, strength=1):
         exit_pos = exit.position
         position = self.get_position()
         diff_x = exit_pos[0] - position[0]

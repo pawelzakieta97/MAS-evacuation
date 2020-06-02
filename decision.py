@@ -56,7 +56,7 @@ class DecisionEngine:
                         heappush(considered, (s[0]+cost, room))
             if s[1] not in opened.keys():
                 opened[s[1]] = s[0]
-            print(s[1], s[0])
+            # print(s[1], s[0])
 
         path = [s]
         while path[0][1] != current_room:
@@ -64,39 +64,40 @@ class DecisionEngine:
             for doorway, room in adjacent_rooms.items():
                 cost = get_cost(doorway, room)
                 if cost is not None:
-                    if room in opened.keys() and opened[room] == path[0][0] - cost:
+                    if room in opened.keys() and room not in [element[1] for element in path]\
+                            and abs(opened[room] - (path[0][0] - cost))< 0.001:
                         path.insert(0, (opened[room], room))
                         break
         return path
+if __name__ == '__main__':
+
+    d1 = Doorway((0,0))
+    d2 = Doorway((10,0))
+    d3 = Doorway((20,0))
+    d4 = Doorway((30,0))
+    r1 = Room(doorways=[d1, d3], walls=[], name='1')
+    r2 = Room(doorways=[d1, d2], walls=[], name='2')
+    r3 = Room(doorways=[d2], walls=[], name='3')
+    r4 = Room(doorways=[d3, d4], walls=[], name='4')
+    r4.is_dangerous = True
+    building = Building(rooms=[r1,r2,r3,r4], doorways=[d1,d2,d3,d4])
+    de = DecisionEngine(world=None, building=building)
+    # de.knowledge[r4] = 2
+    path = de.get_path(r1)
+    print([element[1].name for element in path])
 
 
-d1 = Doorway((0,0))
-d2 = Doorway((10,0))
-d3 = Doorway((20,0))
-d4 = Doorway((30,0))
-r1 = Room(doorways=[d1, d3], walls=[], name='1')
-r2 = Room(doorways=[d1, d2], walls=[], name='2')
-r3 = Room(doorways=[d2], walls=[], name='3')
-r4 = Room(doorways=[d3, d4], walls=[], name='4')
-r4.is_dangerous = True
-building = Building(rooms=[r1,r2,r3,r4], doorways=[d1,d2,d3,d4])
-de = DecisionEngine(world=None, building=building)
-# de.knowledge[r4] = 2
-path = de.get_path(r1)
-print([element[1].name for element in path])
-
-
-# d1 = Doorway((0,0))
-# d2 = Doorway((10,0))
-# d3 = Doorway((20,0))
-# d4 = Doorway((30,0))
-# d5 = Doorway((40,0))
-# r1 = Room(doorways=[d1, d2], walls=[], name='1')
-# r2 = Room(doorways=[d1, d3], walls=[], name='2')
-# r3 = Room(doorways=[d2, d3, d4], walls=[], name='3')
-# r4 = Room(doorways=[d4, d5], walls=[], name='4')
-#
-# building = Building(rooms=[r1,r2,r3,r4], doorways=[d1,d2,d3,d4, d5])
-# de = DecisionEngine(world=None, building=building)
-# # de.knowledge[r4] = 2
-# de.get_path(r1)
+    # d1 = Doorway((0,0))
+    # d2 = Doorway((10,0))
+    # d3 = Doorway((20,0))
+    # d4 = Doorway((30,0))
+    # d5 = Doorway((40,0))
+    # r1 = Room(doorways=[d1, d2], walls=[], name='1')
+    # r2 = Room(doorways=[d1, d3], walls=[], name='2')
+    # r3 = Room(doorways=[d2, d3, d4], walls=[], name='3')
+    # r4 = Room(doorways=[d4, d5], walls=[], name='4')
+    #
+    # building = Building(rooms=[r1,r2,r3,r4], doorways=[d1,d2,d3,d4, d5])
+    # de = DecisionEngine(world=None, building=building)
+    # # de.knowledge[r4] = 2
+    # de.get_path(r1)

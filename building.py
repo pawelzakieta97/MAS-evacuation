@@ -105,7 +105,7 @@ class BuildingExit(Room):
         self.com = exit.position
         self.is_outside = True
 
-def create_room(world,  north_wall, west_wall, south_wall, east_wall, north_doorways=None, west_doorways=None, south_doorways=None, east_doorways=None):
+def create_room(world,  north_wall, west_wall, south_wall, east_wall, north_doorways=None, west_doorways=None, south_doorways=None, east_doorways=None, name=None):
     if north_doorways is None and west_doorways is None and south_doorways is None and east_doorways is None:
         raise ValueError('room must have at least one doorway')
     if north_doorways is None:
@@ -156,7 +156,7 @@ def create_room(world,  north_wall, west_wall, south_wall, east_wall, north_door
         walls.append(Wall(world, last_point, doorway_border_south))
         last_point = (east_doorway.position[0], east_doorway.position[1] + east_doorway.width / 2)
     walls.append(Wall(world, last_point, ne_corner))
-    return Room(walls=walls, doorways=north_doorways + west_doorways + south_doorways + east_doorways)
+    return Room(walls=walls, doorways=north_doorways + west_doorways + south_doorways + east_doorways, name=name)
 
 
 class Building:
