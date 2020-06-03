@@ -6,6 +6,14 @@ from building import *
 
 class Agent:
     def __init__(self, model, type='leader', x=None, y=None, spawn_room:Room=None):
+        """
+        TODO: w przypadku followerow wygenerowac losoa sciezke i uzupelnic wiedze
+        :param model:
+        :param type:
+        :param x:
+        :param y:
+        :param spawn_room:
+        """
         self.type = type
         self.current_room = None
         if spawn_room is not None:
@@ -22,7 +30,7 @@ class Agent:
             y = random.randint(min_y+1, max_y-1)
             self.current_room = spawn_room
         self.body = AgentBody(model.world, x=x, y=y, color=(255,255,0) if type == 'follower' else (255,0,255))
-        self.decision_engine = decision.DecisionEngine(model.world, model.building, agent_type=type)
+        self.decision_engine = decision.DecisionEngine(model, agent_type=type)
         self.path = None
 
     def update_path(self):

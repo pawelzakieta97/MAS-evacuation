@@ -3,9 +3,8 @@ from heapq import heappop, heappush
 from building import *
 
 class DecisionEngine:
-    def __init__(self, world, building: Building, agent_type='leader'):
-        self.world = world
-        self.building = building
+    def __init__(self, model, agent_type='leader'):
+        self.mdoel=model
         self.agent_type = agent_type
 
         # KNOWLEDGE[room]:
@@ -20,18 +19,29 @@ class DecisionEngine:
         #       never enter a dangerous room)
         self.knowledge = {}
         if agent_type == 'follower':
-            for room in building.rooms:
+            for room in model.building.rooms:
                 self.knowledge[room] = 0
         if agent_type == 'leader':
-            for room in building.rooms:
+            for room in model.building.rooms:
                 self.knowledge[room] = 1
 
-    def observation(self, agents):
+    def update(self, current_room):
         """
+        :param current_room: :return:
+        TODO: funkcja ma sie wywolac za kazdym razem jak agent wchodzi no nowego pokoju (z nowym pokojem w argumencie). Tutaj ma byc logika racjonalnosci wyboru
+        follower:
+        top: zapytac lidera
+        middle albo top ale nie ma lidera w pokoju: przeszulac wlasny graf
+        worst: tam gdzie wiekszosc
 
-        :param agents:
-        :return:
+        lider:
+        top: przeszukac graf
+        worst: za wszystkimi
+
+        Opcjonalnie:
+        zwisualizowac graficznie komunikacje miedzy agentami
         """
+        pass
 
     def get_path(self, current_room: Room):
         UNKNOWN_COST = 1000
