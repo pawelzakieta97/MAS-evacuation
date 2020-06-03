@@ -26,6 +26,13 @@ class DecisionEngine:
             for room in building.rooms:
                 self.knowledge[room] = 1
 
+    def observation(self, agents):
+        """
+
+        :param agents:
+        :return:
+        """
+
     def get_path(self, current_room: Room):
         UNKNOWN_COST = 1000
         def get_cost(doorway: Doorway, room: Room):
@@ -69,6 +76,8 @@ class DecisionEngine:
                         path.insert(0, (opened[room], room))
                         break
         return path
+
+
 if __name__ == '__main__':
 
     d1 = Doorway((0,0))
