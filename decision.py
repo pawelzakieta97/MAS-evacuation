@@ -1,11 +1,14 @@
+import random
 from collections import OrderedDict
 from heapq import heappop, heappush
 from building import *
+from typing import List
+from model import Model
 
 class DecisionEngine:
-    def __init__(self, model, agent_type='leader'):
-        self.mdoel=model
-        self.agent_type = agent_type
+    def __init__(self, model, agent):
+        self.model = model
+        self.agent = agent
 
         # KNOWLEDGE[room]:
         # 0 -   No information about a room, a follower only knows there is a
@@ -18,12 +21,27 @@ class DecisionEngine:
         #       is dangerous once they get to any adjacent room (thus they will
         #       never enter a dangerous room)
         self.knowledge = {}
-        if agent_type == 'follower':
+        if self.agent.type == 'follower':
+            path = self.entry_path([self.agent.current_room])
             for room in model.building.rooms:
-                self.knowledge[room] = 0
-        if agent_type == 'leader':
+                self.knowledge[room] = 1 if room in path else 0
+
+        if self.agent.type == 'leader':
             for room in model.building.rooms:
                 self.knowledge[room] = 1
+
+    def entry_path(self, path:List[Room]):
+        adjacent_rooms = list(path[-1].get_adjacent_rooms().values())
+        random.shuffle(adjacent_rooms)
+        for room in adjacent_rooms:
+            if room in path:
+                continue
+            if room.is_outside:
+                return path+[room]
+            subpath = self.entry_path(path+[room])
+            if subpath is not None and subpath[-1].is_outside:
+                return subpath
+        return None
 
     def update(self, current_room):
         """
@@ -89,21 +107,22 @@ class DecisionEngine:
 
 
 if __name__ == '__main__':
-
-    d1 = Doorway((0,0))
-    d2 = Doorway((10,0))
-    d3 = Doorway((20,0))
-    d4 = Doorway((30,0))
-    r1 = Room(doorways=[d1, d3], walls=[], name='1')
-    r2 = Room(doorways=[d1, d2], walls=[], name='2')
-    r3 = Room(doorways=[d2], walls=[], name='3')
-    r4 = Room(doorways=[d3, d4], walls=[], name='4')
-    r4.is_dangerous = True
-    building = Building(rooms=[r1,r2,r3,r4], doorways=[d1,d2,d3,d4])
-    de = DecisionEngine(world=None, building=building)
-    # de.knowledge[r4] = 2
-    path = de.get_path(r1)
-    print([element[1].name for element in path])
+    pass
+    # d1 = Doorway((0,0))
+    # d2 = Doorway((10,0))
+    # d3 = Doorway((20,0))
+    # d4 = Doorway((30,0))
+    # r1 = Room(doorways=[d1, d3], walls=[], name='1')
+    # r2 = Room(doorways=[d1, d2], walls=[], name='2')
+    # r3 = Room(doorways=[d2], walls=[], name='3')
+    # r4 = Room(doorways=[d3, d4], walls=[], name='4')
+    # r4.is_dangerous = True
+    # building = Building(rooms=[r1,r2,r3,r4], doorways=[d1,d2,d3,d4])
+    # model =
+    # de = DecisionEngine(model=None, agent=Agent(''))
+    # # de.knowledge[r4] = 2
+    # path = de.get_path(r1)
+    # print([element[1].name for element in path])
 
 
     # d1 = Doorway((0,0))

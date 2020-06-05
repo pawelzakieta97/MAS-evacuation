@@ -9,7 +9,7 @@ import agent
 
 
 class Model:
-    def __init__(self, num_agents=30):
+    def __init__(self, num_agents=30, wrld = None, building=None, spawn=None):
         self.render_settings = {'PPM': 20, 'SCREEN_HEIGHT': 480, 'SCREEN_WIDTH': 640,
                            'TARGET_FPS': 60, 'TIME_STEP': 1 / 60}
         self.screen = pygame.display.set_mode(
@@ -20,21 +20,25 @@ class Model:
 
         # --- pybox2d world setup ---
         # Create the world
-        self.world = world(gravity=(0, 0), doSleep=True)
-        doorways = [Doorway((10, 8), 1.5), Doorway((10, 12), 1.5), Doorway((20, 5), 1.5),
-                    Doorway((20, 15), 1.5), Doorway((30, 5), 1.5)]
-        room1 = create_room(self.world, 15, 0, 5, 10,
-                            east_doorways=[doorways[0], doorways[1]], name='r 1')
-        room2 = create_room(self.world, 20, 10, 10, 20, west_doorways=[doorways[1]],
-                            east_doorways=[doorways[3]], name='r 2')
-        room3 = create_room(self.world, 10, 10, 0, 20, west_doorways=[doorways[0]],
-                            east_doorways=[doorways[2]], name='r 3')
-        room4 = create_room(self.world, 20, 20, 10, 30, west_doorways=[doorways[3]], name='r 4')
-        room5 = create_room(self.world, 10, 20, 0, 30, west_doorways=[doorways[2]],
-                            east_doorways=[doorways[4]], name='r 5')
-        self.building = Building(rooms=[room1, room2, room3, room4, room5],
-                            doorways=doorways)
-        self.agents = [agent.Agent(self, type='leader', spawn_room=room4) for i in range(num_agents)]
+        if wrld is None and building is None:
+            self.world = world(gravity=(0, 0), doSleep=True)
+            doorways = [Doorway((10, 8), 1.5), Doorway((10, 12), 1.5), Doorway((20, 5), 1.5),
+                        Doorway((20, 15), 1.5), Doorway((30, 5), 1.5), Doorway((15, 10), 1.5), Doorway((25, 10), 1.5),]
+            room1 = create_room(self.world, 15, 0, 5, 10,
+                                east_doorways=[doorways[0], doorways[1]], name='r 1')
+            room2 = create_room(self.world, 20, 10, 10, 20, west_doorways=[doorways[1]], #south_doorways=[doorways[5]],
+                                east_doorways=[doorways[3]], name='r 2')
+            room3 = create_room(self.world, 10, 10, 0, 20, west_doorways=[doorways[0]], #north_doorways=[doorways[5]],
+                                east_doorways=[doorways[2]], name='r 3')
+            room4 = create_room(self.world, 20, 20, 10, 30, west_doorways=[doorways[3]], south_doorways=[doorways[6]],
+                                name='r 4')
+            room5 = create_room(self.world, 10, 20, 0, 30, west_doorways=[doorways[2]], north_doorways=[doorways[6]],
+                                east_doorways=[doorways[4]], name='r 5')
+            self.building = Building(rooms=[room1, room2, room3, room4, room5],
+                                doorways=doorways)
+            spawn = room2
+
+        self.agents = [agent.Agent(self, type='follower', spawn_room=spawn) for i in range(num_agents)]
 
         self.running = True
 
@@ -71,5 +75,5 @@ class Model:
 
 
 if __name__ == '__main__':
-    model = Model(30)
+    model = Model(1)
     model.run()

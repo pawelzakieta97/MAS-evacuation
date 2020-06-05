@@ -29,8 +29,8 @@ class Agent:
             x = random.randint(min_x+1, max_x-1)
             y = random.randint(min_y+1, max_y-1)
             self.current_room = spawn_room
-        self.body = AgentBody(model.world, x=x, y=y, color=(255,255,0) if type == 'follower' else (255,0,255))
-        self.decision_engine = decision.DecisionEngine(model, agent_type=type)
+        self.body = AgentBody(model.world, x=x, y=y, color=(255, 255, 0) if type == 'follower' else (255,0,255))
+        self.decision_engine = decision.DecisionEngine(model, agent=self)
         self.path = None
 
     def update_path(self):
