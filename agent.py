@@ -5,9 +5,11 @@ import decision
 from building import *
 
 class Agent:
-    def __init__(self, model, type='leader', x=None, y=None, spawn_room:Room=None):
+    def __init__(self, model, type='leader', x=None, y=None, spawn_room: Room=None):
         self.type = type
+        self.model = model
         self.current_room = None
+        self.avg_vel = [0,0]
         if spawn_room is not None:
             min_x = 99999999
             max_x = -99999999
@@ -26,7 +28,32 @@ class Agent:
         self.path = None
 
     def go_to_exit(self):
+        velocity = self.body.get_velocity()
+        self.avg_vel[0] = self.avg_vel[0]*0.9+0.1*velocity[0]
+        self.avg_vel[1] = self.avg_vel[1] * 0.9 + 0.1 * velocity[1]
+        wkurfactor_threshold = 0.9
+        if not self.current_room.is_outside:
+            if self.avg_vel[0] ** 2 + self.avg_vel[1] ** 2 < 0.4:
+                self.decision_engine.wkurfactor = (1.2+299*self.decision_engine.wkurfactor)/300
+            else:
+                self.decision_engine.wkurfactor = (299 * self.decision_engine.wkurfactor) / 300
+            if self.decision_engine.wkurfactor>wkurfactor_threshold:
+                self.decision_engine.knowledge[self.current_room.get_doorway(self.path[1][1])] = 3
+                self.path = None
+            if self.decision_engine.wkurfactor>wkurfactor_threshold*0.7:
+                shout_prob = 0.05
+                if random.random()<shout_prob:
+                    self.decision_engine.shout()
+
+        update_room_prob = 0.05
+        if random.random() < update_room_prob:
+            updated_room = self.model.building.which_room(self.body.get_position())
+            if updated_room != self.current_room:
+                self.path = None
+                if updated_room is not None:
+                    self.current_room = updated_room
         if self.current_room.is_outside:
+            self.body.maintain_force()
             return
         if self.path is None:
             self.decision_engine.update(self.current_room)
@@ -49,4 +76,6 @@ class Agent:
                     break
 
     def draw(self, screen, render_settings):
+        multiplier = (1.5-self.decision_engine.wkurfactor)/2
+        self.body.color = [self.body.base_color[0]*multiplier, self.body.base_color[1]*multiplier, self.body.base_color[2]*multiplier]
         self.body.draw(screen, render_settings)

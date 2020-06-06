@@ -18,12 +18,14 @@ class AgentBody:
         self.body = world.CreateDynamicBody(position=(x, y), linearDamping=1)
         self.fixture = self.body.CreateCircleFixture(radius=0.35, density=1, friction=0.3)
         self.circle = self.fixture.shape
+        self.base_color = color
         self.color = color
+        self.prev_force = None
 
     def apply_force(self, force, point, wake=True):
         self.body.ApplyForce(force=force, point=point, wake=wake)
 
-    def force_to_exit(self, exit, strength=2, impulse_prob=0.05):
+    def force_to_exit(self, exit, strength=1, impulse_prob=0.05):
         exit_pos = exit.position
         position = self.get_position()
         velocity = self.get_velocity()
@@ -34,7 +36,11 @@ class AgentBody:
         if distance<2 and velocity[0] ** 2 + velocity[1] ** 2 < 0.05 and random.random()<impulse_prob:
             strength *= 100
         force = (diff_x/distance*strength, diff_y/distance*strength)
+        self.prev_force = force
         self.apply_force(force, position)
+
+    def maintain_force(self):
+        self.apply_force(self.prev_force, self.get_position())
 
     def get_position(self):
         return self.body.position

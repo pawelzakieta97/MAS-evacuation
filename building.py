@@ -188,8 +188,6 @@ class Building:
         return None
 
 
-
-
 if __name__ == '__main__':
     render_settings = {'PPM': 20, 'SCREEN_HEIGHT': 480, 'SCREEN_WIDTH': 640, 'TARGET_FPS':60, 'TIME_STEP': 1/60}
     screen = pygame.display.set_mode((render_settings['SCREEN_WIDTH'], render_settings['SCREEN_HEIGHT']), 0, 32)

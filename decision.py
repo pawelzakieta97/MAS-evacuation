@@ -3,6 +3,7 @@ from collections import OrderedDict
 from heapq import heappop, heappush
 from building import *
 from typing import List
+from distance import distance
 from model import Model
 
 class DecisionEngine:
@@ -10,7 +11,8 @@ class DecisionEngine:
         self.model = model
         self.agent = agent
         self.rationality = 0.1+random.random()*0.8
-        # self.rationality = 0.1
+        # self.rationality = 1
+        self.wkurfactor = 0
         # KNOWLEDGE[room]:
         # 0 -   No information about a room, a follower only knows there is a
         #       room that theoretically might lead to an exit. During the
@@ -21,15 +23,20 @@ class DecisionEngine:
         #       room will be excluded from graph search. Agents know the room
         #       is dangerous once they get to any adjacent room (thus they will
         #       never enter a dangerous room)
+        # 3 -   Clogged doorway
         self.knowledge = {}
         if self.agent.type == 'follower':
             path = self.entry_path([self.agent.current_room])
             for room in model.building.rooms:
                 self.knowledge[room] = 1 if room in path else 0
+            for doorway in model.building.doorways:
+                self.knowledge[doorway] = 0
 
         if self.agent.type == 'leader':
             for room in model.building.rooms:
                 self.knowledge[room] = 1
+            for doorway in model.building.doorways:
+                self.knowledge[doorway] = 0
 
     def entry_path(self, path: List[Room]):
         adjacent_rooms = list(path[-1].get_adjacent_rooms().values())
@@ -119,6 +126,7 @@ class DecisionEngine:
         # WYMIANA INFORMACJI O ZAGROZENIU
 
     def update(self, current_room):
+        self.wkurfactor = 0
         adjacent_rooms = current_room.get_adjacent_rooms()
         self.knowledge[current_room] = 1
         for room in adjacent_rooms.values():
@@ -130,14 +138,16 @@ class DecisionEngine:
         def get_cost(src: Room, room: Room):#doorway: Doorway, room: Room):
             doorway = src.get_doorway(room)
             additional_cost = 0
+            if self.knowledge[doorway]==3:
+                additional_cost = 10000
             if self.agent.type == 'leader':
-                CPA = 0.2
+                CPA = 1
+                # CPA*=10
                 if src == current_room:
                     agents = self.model.get_agents_in_room(src)
                     for agent in agents:
                         if agent.path is not None and len(agent.path)>1 and agent.path[1][1]==room:
                             additional_cost += CPA
-                print(additional_cost)
             #additional_cost = 0
             if room.is_outside:
                 return 0+additional_cost
@@ -179,6 +189,19 @@ class DecisionEngine:
                         path.insert(0, (opened[room], room))
                         break
         return path
+
+    def shout(self):
+        shout_range = 2
+        print('shouting')
+        for agent in self.model.agents:
+            if distance(self.agent.body.get_position(), agent.body.get_position())<shout_range:
+                print('\t informed')
+                for key, value in self.knowledge.items():
+                    if value==2:
+                        if agent.decision_engine.knowledge[key] != value:
+                            agent.path = None
+                        agent.decision_engine.knowledge[key] = value
+
 
 
 if __name__ == '__main__':
