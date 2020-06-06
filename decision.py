@@ -30,7 +30,7 @@ class DecisionEngine:
             for room in model.building.rooms:
                 self.knowledge[room] = 1
 
-    def entry_path(self, path:List[Room]):
+    def entry_path(self, path: List[Room]):
         adjacent_rooms = list(path[-1].get_adjacent_rooms().values())
         random.shuffle(adjacent_rooms)
         for room in adjacent_rooms:
@@ -42,6 +42,24 @@ class DecisionEngine:
             if subpath is not None and subpath[-1].is_outside:
                 return subpath
         return None
+
+    def go_to_most(self, current_room):
+        agents = self.model.get_agents_in_room(current_room)
+        choices = {}
+        for agent in agents:
+            if agent.path is not None:
+                if agent.path[1][1] in choices.keys():
+                    choices[agent.pathagent.path[1][1]] += 1
+                else:
+                    choices[agent.pathagent.path[1][1]] =1
+        max = 0
+        choice = None
+        for room in choices.keys():
+            if choices[room] > max:
+                max = choices[room]
+                choice = room
+        return current_room.get_doorway(choice)
+
 
     def update(self, current_room):
         """

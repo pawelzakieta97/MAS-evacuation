@@ -33,14 +33,11 @@ class Agent:
         self.decision_engine = decision.DecisionEngine(model, agent=self)
         self.path = None
 
-    def update_path(self):
-        self.path = self.decision_engine.get_path(self.current_room)
-
     def go_to_exit(self):
         if self.current_room.is_outside:
             return
         if self.path is None:
-            self.update_path()
+            self.path = self.decision_engine.get_path(self.current_room)
         # 1st room in the path list (index 0) is the current room
         dst_room = self.path[1][1]
         dst_doorway = self.current_room.get_doorway(dst_room)

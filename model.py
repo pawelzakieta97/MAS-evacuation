@@ -35,7 +35,7 @@ class Model:
             room5 = create_room(self.world, 10, 20, 0, 30, west_doorways=[doorways[2]], north_doorways=[doorways[6]],
                                 east_doorways=[doorways[4]], name='r 5')
             self.building = Building(rooms=[room1, room2, room3, room4, room5],
-                                doorways=doorways)
+                                     doorways=doorways)
             spawn = room2
 
         self.agents = [agent.Agent(self, type='follower', spawn_room=spawn) for i in range(num_agents)]
