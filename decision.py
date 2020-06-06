@@ -7,12 +7,15 @@ from distance import distance
 from model import Model
 
 class DecisionEngine:
-    def __init__(self, model, agent):
+    def __init__(self, model, agent, rationality=None):
         self.model = model
         self.agent = agent
-        self.rationality = 0.1+random.random()*0.8
-        self.rationality = 0.1
         self.wkurfactor = 0
+        if rationality is None:
+            self.rationality = 0.1+random.random()*0.8
+        else:
+            self.rationality = rationality
+        # self.rationality = 0.1
         # KNOWLEDGE[room]:
         # 0 -   No information about a room, a follower only knows there is a
         #       room that theoretically might lead to an exit. During the

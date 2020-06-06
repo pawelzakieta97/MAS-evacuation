@@ -5,7 +5,7 @@ import decision
 from building import *
 
 class Agent:
-    def __init__(self, model, type='leader', x=None, y=None, spawn_room: Room=None):
+    def __init__(self, model, type='leader', x=None, y=None, spawn_room:Room=None, rationality=None):
         self.type = type
         self.model = model
         self.current_room = None
@@ -26,7 +26,7 @@ class Agent:
             y = random.randint(min_y+1, max_y-1)
             self.current_room = spawn_room
         self.body = AgentBody(model.world, x=x, y=y, color=(255, 255, 0) if type == 'follower' else (255, 0, 255))
-        self.decision_engine = decision.DecisionEngine(model, agent=self)
+        self.decision_engine = decision.DecisionEngine(model, agent=self, rationality=rationality)
         self.path = None
 
     def go_to_exit(self):
