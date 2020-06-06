@@ -1,4 +1,5 @@
 import math
+import random
 
 import pygame
 from pygame.locals import (QUIT, KEYDOWN, K_ESCAPE)
@@ -15,24 +16,31 @@ class AgentBody:
         if color is None:
             color = (255, 255, 0, 255)
         self.body = world.CreateDynamicBody(position=(x, y), linearDamping=1)
-        self.fixture = self.body.CreateCircleFixture(radius=0.25, density=1, friction=0.3)
+        self.fixture = self.body.CreateCircleFixture(radius=0.35, density=1, friction=0.3)
         self.circle = self.fixture.shape
         self.color = color
 
     def apply_force(self, force, point, wake=True):
         self.body.ApplyForce(force=force, point=point, wake=wake)
 
-    def force_to_exit(self, exit, strength=1):
+    def force_to_exit(self, exit, strength=2, impulse_prob=0.05):
         exit_pos = exit.position
         position = self.get_position()
+        velocity = self.get_velocity()
+
         diff_x = exit_pos[0] - position[0]
         diff_y = exit_pos[1] - position[1]
         distance = math.sqrt(diff_x**2+diff_y**2)
+        if distance<2 and velocity[0] ** 2 + velocity[1] ** 2 < 0.05 and random.random()<impulse_prob:
+            strength *= 100
         force = (diff_x/distance*strength, diff_y/distance*strength)
         self.apply_force(force, position)
 
     def get_position(self):
         return self.body.position
+
+    def get_velocity(self):
+        return self.body.linearVelocity
 
     def draw(self, screen, render_settings):
         PPM = render_settings['PPM']

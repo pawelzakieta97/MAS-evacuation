@@ -77,5 +77,5 @@ class Model:
 
 
 if __name__ == '__main__':
-    model = Model(30)
+    model = Model(50)
     model.run()

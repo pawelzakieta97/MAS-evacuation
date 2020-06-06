@@ -127,13 +127,24 @@ class DecisionEngine:
 
     def get_path_A(self, current_room: Room):
         UNKNOWN_COST = 1000
-        def get_cost(doorway: Doorway, room: Room):
+        def get_cost(src: Room, room: Room):#doorway: Doorway, room: Room):
+            doorway = src.get_doorway(room)
+            additional_cost = 0
+            if self.agent.type == 'leader':
+                CPA = 0.2
+                if src == current_room:
+                    agents = self.model.get_agents_in_room(src)
+                    for agent in agents:
+                        if agent.path is not None and len(agent.path)>1 and agent.path[1][1]==room:
+                            additional_cost += CPA
+                print(additional_cost)
+            #additional_cost = 0
             if room.is_outside:
-                return 0
+                return 0+additional_cost
             elif self.knowledge[room] == 1:
-                return doorway.distance
+                return doorway.distance+additional_cost
             elif self.knowledge[room] == 0:
-                return UNKNOWN_COST
+                return UNKNOWN_COST+additional_cost
             return None
         opened = {}
         considered = []
@@ -150,7 +161,7 @@ class DecisionEngine:
             adjacent_rooms = s[1].get_adjacent_rooms()
             for doorway, room in adjacent_rooms.items():
                 if room not in opened.keys():
-                    cost = get_cost(doorway, room)
+                    cost = get_cost(s[1],room)#doorway, room)
                     if cost is not None:
                         heappush(considered, (s[0]+cost, room))
             if s[1] not in opened.keys():
@@ -161,7 +172,7 @@ class DecisionEngine:
         while path[0][1] != current_room:
             adjacent_rooms = path[0][1].get_adjacent_rooms()
             for doorway, room in adjacent_rooms.items():
-                cost = get_cost(doorway, room)
+                cost = get_cost(room, path[0][1])#doorway, room)
                 if cost is not None:
                     if room in opened.keys() and room not in [element[1] for element in path]\
                             and abs(opened[room] - (path[0][0] - cost))< 0.001:
