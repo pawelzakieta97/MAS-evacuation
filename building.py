@@ -177,6 +177,18 @@ class Building:
         for room in self.rooms:
             room.draw(screen, render_settings)
 
+    def which_room(self, position):
+        for room in self.rooms:
+            if room.is_outside:
+                continue
+            wall_x_coords = [wall.body.position[0] for wall in room.walls]
+            wall_y_coords = [wall.body.position[1] for wall in room.walls]
+            if position[0] > min(wall_x_coords) and position[0] < max(wall_x_coords) and position[1] > min(wall_y_coords) and position[1] < max(wall_y_coords):
+                return room
+        return None
+
+
+
 
 if __name__ == '__main__':
     render_settings = {'PPM': 20, 'SCREEN_HEIGHT': 480, 'SCREEN_WIDTH': 640, 'TARGET_FPS':60, 'TIME_STEP': 1/60}
