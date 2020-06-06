@@ -9,7 +9,8 @@ class DecisionEngine:
     def __init__(self, model, agent):
         self.model = model
         self.agent = agent
-
+        self.rationality = 0.1+random.random()*0.8
+        # self.rationality = 0.1
         # KNOWLEDGE[room]:
         # 0 -   No information about a room, a follower only knows there is a
         #       room that theoretically might lead to an exit. During the
@@ -43,25 +44,28 @@ class DecisionEngine:
                 return subpath
         return None
 
-    def go_to_most(self, current_room):
+    def follow_most(self, current_room):
         agents = self.model.get_agents_in_room(current_room)
         choices = {}
         for agent in agents:
-            if agent.path is not None:
+            if agent.path is not None and len(agent.path)>1:
                 if agent.path[1][1] in choices.keys():
-                    choices[agent.pathagent.path[1][1]] += 1
+                    choices[agent.path[1][1]] += 1
                 else:
-                    choices[agent.pathagent.path[1][1]] =1
+                    choices[agent.path[1][1]] =1
         max = 0
         choice = None
         for room in choices.keys():
             if choices[room] > max:
                 max = choices[room]
                 choice = room
-        return current_room.get_doorway(choice)
+
+        if choice is None:
+            return None
+        return [(0, current_room), (0, choice)]
 
 
-    def update(self, current_room):
+    def get_path(self, current_room):
         """
         :param current_room: :return:
         TODO: funkcja ma sie wywolac za kazdym razem jak agent wchodzi no nowego pokoju (z nowym pokojem w argumencie). Tutaj ma byc logika racjonalnosci wyboru
@@ -77,9 +81,51 @@ class DecisionEngine:
         Opcjonalnie:
         zwisualizowac graficznie komunikacje miedzy agentami
         """
-        pass
+        path = None
+        if self.agent.type == 'follower':
+            r = 2**(1/self.rationality-1)-1
+            x = 1/(1+r+r**2)
+            rand = 0.1+random.random()*0.8
+            # rand = 0.5
+            if rand<x:
+                path = self.ask_leader(current_room)
+                print('asking')
+            if rand>x+r*x:
+                path = self.follow_most(current_room)
+                print('following')
+            if x < rand < x + r * x or path is None:
+                print('using knowledge')
+                path = self.get_path_A(current_room)
 
-    def get_path(self, current_room: Room):
+        if self.agent.type == 'leader':
+            rand = random.random()
+            if rand>self.rationality:
+                path = self.follow_most(current_room)
+                print('leader following')
+            if rand<self.rationality or path is None:
+                path = self.get_path_A(current_room)
+                print('leader rational')
+        return path
+
+    def ask_leader(self, current_room):
+        agents = self.model.get_agents_in_room(current_room)
+        leaders = [agent for agent in agents if agent.type == 'leader']
+        random.shuffle(leaders)
+        if len(leaders):
+            leader = leaders[0]
+            return leader.decision_engine.get_path(current_room) if leader.path is None else leader.path
+        else:
+            return None
+        # WYMIANA INFORMACJI O ZAGROZENIU
+
+    def update(self, current_room):
+        adjacent_rooms = current_room.get_adjacent_rooms()
+        self.knowledge[current_room] = 1
+        for room in adjacent_rooms.values():
+            if room.is_dangerous:
+                self.knowledge[room] = 2
+
+    def get_path_A(self, current_room: Room):
         UNKNOWN_COST = 1000
         def get_cost(doorway: Doorway, room: Room):
             if room.is_outside:

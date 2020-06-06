@@ -9,7 +9,7 @@ import agent
 
 
 class Model:
-    def __init__(self, num_agents=30, wrld = None, building=None, spawn=None):
+    def __init__(self, num_agents=30, wrld=None, building=None, spawn=None):
         self.render_settings = {'PPM': 20, 'SCREEN_HEIGHT': 480, 'SCREEN_WIDTH': 640,
                            'TARGET_FPS': 60, 'TIME_STEP': 1 / 60}
         self.screen = pygame.display.set_mode(
@@ -34,11 +34,13 @@ class Model:
                                 name='r 4')
             room5 = create_room(self.world, 10, 20, 0, 30, west_doorways=[doorways[2]], north_doorways=[doorways[6]],
                                 east_doorways=[doorways[4]], name='r 5')
+            # room5.is_dangerous = True
             self.building = Building(rooms=[room1, room2, room3, room4, room5],
                                      doorways=doorways)
             spawn = room2
 
         self.agents = [agent.Agent(self, type='follower', spawn_room=spawn) for i in range(num_agents)]
+        self.agents.append(agent.Agent(self, type='leader', spawn_room=spawn))
 
         self.running = True
 
@@ -75,5 +77,5 @@ class Model:
 
 
 if __name__ == '__main__':
-    model = Model(1)
+    model = Model(30)
     model.run()

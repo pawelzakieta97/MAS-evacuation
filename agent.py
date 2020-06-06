@@ -6,14 +6,6 @@ from building import *
 
 class Agent:
     def __init__(self, model, type='leader', x=None, y=None, spawn_room:Room=None):
-        """
-        TODO: w przypadku followerow wygenerowac losoa sciezke i uzupelnic wiedze
-        :param model:
-        :param type:
-        :param x:
-        :param y:
-        :param spawn_room:
-        """
         self.type = type
         self.current_room = None
         if spawn_room is not None:
@@ -29,7 +21,7 @@ class Agent:
             x = random.randint(min_x+1, max_x-1)
             y = random.randint(min_y+1, max_y-1)
             self.current_room = spawn_room
-        self.body = AgentBody(model.world, x=x, y=y, color=(255, 255, 0) if type == 'follower' else (255,0,255))
+        self.body = AgentBody(model.world, x=x, y=y, color=(255, 255, 0) if type == 'follower' else (255, 0, 255))
         self.decision_engine = decision.DecisionEngine(model, agent=self)
         self.path = None
 
@@ -37,8 +29,12 @@ class Agent:
         if self.current_room.is_outside:
             return
         if self.path is None:
+            self.decision_engine.update(self.current_room)
             self.path = self.decision_engine.get_path(self.current_room)
         # 1st room in the path list (index 0) is the current room
+        if self.path is None or len(self.path) < 2:
+            self.path = None
+            return
         dst_room = self.path[1][1]
         dst_doorway = self.current_room.get_doorway(dst_room)
         self.body.force_to_exit(dst_doorway)
