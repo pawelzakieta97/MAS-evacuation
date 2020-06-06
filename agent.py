@@ -10,6 +10,8 @@ class Agent:
         self.model = model
         self.current_room = None
         self.avg_vel = [0,0]
+        self.shouted = 0
+        self.informed = 0
         if spawn_room is not None:
             min_x = 99999999
             max_x = -99999999
@@ -40,10 +42,8 @@ class Agent:
             if self.decision_engine.wkurfactor>wkurfactor_threshold:
                 self.decision_engine.knowledge[self.current_room.get_doorway(self.path[1][1])] = 3
                 self.path = None
-            if self.decision_engine.wkurfactor>wkurfactor_threshold*0.7:
-                shout_prob = 0.05
-                if random.random()<shout_prob:
-                    self.decision_engine.shout()
+            if random.random()<self.decision_engine.wkurfactor*0.03:
+                self.decision_engine.shout()
 
         update_room_prob = 0.05
         if random.random() < update_room_prob:
@@ -76,6 +76,11 @@ class Agent:
                     break
 
     def draw(self, screen, render_settings):
-        multiplier = (1.5-self.decision_engine.wkurfactor)/2
-        self.body.color = [self.body.base_color[0]*multiplier, self.body.base_color[1]*multiplier, self.body.base_color[2]*multiplier]
+        wkur_multiplier = (1.5-self.decision_engine.wkurfactor)/2
+        self.body.color = [self.body.base_color[0]*wkur_multiplier,
+                           self.body.base_color[1]*wkur_multiplier,
+                           self.body.base_color[2]*wkur_multiplier]
+        if self.shouted > 0:
+            self.body.color = [25*self.shouted, 25*self.shouted, 25*self.shouted]
+            self.shouted -=1
         self.body.draw(screen, render_settings)

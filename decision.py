@@ -11,7 +11,7 @@ class DecisionEngine:
         self.model = model
         self.agent = agent
         self.rationality = 0.1+random.random()*0.8
-        # self.rationality = 1
+        self.rationality = 0.1
         self.wkurfactor = 0
         # KNOWLEDGE[room]:
         # 0 -   No information about a room, a follower only knows there is a
@@ -115,12 +115,13 @@ class DecisionEngine:
         return path
 
     def ask_leader(self, current_room):
-        agents = self.model.get_agents_in_room(current_room)
-        leaders = [agent for agent in agents if agent.type == 'leader']
+        agents = self.model.agents
+        ask_distance = 200
+        leaders = [agent for agent in agents if agent.type == 'leader' and distance(agent.body.get_position(), self.agent.body.get_position())<ask_distance]
         random.shuffle(leaders)
         if len(leaders):
             leader = leaders[0]
-            return leader.decision_engine.get_path(current_room) if leader.path is None else leader.path
+            return leader.decision_engine.get_path(current_room)
         else:
             return None
         # WYMIANA INFORMACJI O ZAGROZENIU
@@ -141,7 +142,7 @@ class DecisionEngine:
             if self.knowledge[doorway]==3:
                 additional_cost = 10000
             if self.agent.type == 'leader':
-                CPA = 1
+                CPA = 0.2
                 # CPA*=10
                 if src == current_room:
                     agents = self.model.get_agents_in_room(src)
@@ -191,8 +192,15 @@ class DecisionEngine:
         return path
 
     def shout(self):
+        has_danger_info = False
+        for value in self.knowledge.values():
+            if value == 2:
+                has_danger_info = True
+        if not has_danger_info:
+            return
         shout_range = 2
         print('shouting')
+        self.agent.shouted = 10
         for agent in self.model.agents:
             if distance(self.agent.body.get_position(), agent.body.get_position())<shout_range:
                 print('\t informed')
