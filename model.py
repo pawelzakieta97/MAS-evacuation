@@ -2,6 +2,7 @@ from agent_body import AgentBody
 from building import *
 import pygame
 from pygame.locals import (QUIT, KEYDOWN, K_ESCAPE)
+import numpy as np
 
 from Box2D.b2 import (world, polygonShape, circleShape, staticBody, dynamicBody)
 import random
@@ -40,11 +41,12 @@ class Model:
             spawn = room1
 
         self.agents = [agent.Agent(self, type='follower', spawn_room=spawn, rationality=rationality) for i in range(int((1-leader_proportion)*num_agents))]
-        self.agents.append(agent.Agent(self, type='leader', spawn_room=spawn, rationality=rationality) for i in range(int(leader_proportion*num_agents)))
-
+        leaders = [agent.Agent(self, type='leader', spawn_room=spawn, rationality=rationality) for i in range(int(leader_proportion*num_agents))]
+        self.agents += leaders
+        self.num_agents = num_agents
         self.running = True
 
-    def step(self):
+    def step(self, outside):
         for event in pygame.event.get():
             if event.type == QUIT or (
                     event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -56,16 +58,26 @@ class Model:
         for agent in self.agents:
             agent.draw(self.screen, self.render_settings)
             agent.go_to_exit()
+            if agent.current_room.is_outside:
+                outside += 1
 
         # Make Box2D simulate the physics of our world for one step.
         self.world.Step(self.render_settings['TIME_STEP'], 10, 10)
 
         # Flip the screen and try to keep at the target FPS
         pygame.display.flip()
+        return outside
 
     def run(self):
+        # outside = 0
+        steps = 0
+        agents_outside = np.zeros((3000, 1))
         while self.running:
-            self.step()
+            outside = self.step(0)
+            agents_outside[steps] = outside
+            steps += 1
+            if outside == len(self.agents):
+                np.savetxt('wynik.csv', agents_outside, delimiter=' ')
             self.clock.tick(self.render_settings['TARGET_FPS'])
 
     def get_agents_in_room(self, room):
@@ -77,5 +89,5 @@ class Model:
 
 
 if __name__ == '__main__':
-    model = Model(30)
+    model = Model(50)
     model.run()
