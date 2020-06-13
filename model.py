@@ -19,6 +19,7 @@ class Model:
         pygame.display.set_caption('Simple pygame example')
         self.clock = pygame.time.Clock()
 
+
         # --- pybox2d world setup ---
         # Create the world
         if door_width is None:
@@ -48,8 +49,8 @@ class Model:
                                      doorways=doorways)
             spawn = room1
 
-        self.agents = [agent.Agent(self, type='follower', spawn_room=spawn, rationality=rationality) for i in range(int((1-leader_proportion)*num_agents))]
-        leaders = [agent.Agent(self, type='leader', spawn_room=spawn, rationality=rationality) for i in range(int(leader_proportion*num_agents))]
+        self.agents = [agent.Agent(self, type='follower', spawn_room=random.choice([room1, room2]), rationality=rationality) for i in range(int((1-leader_proportion)*num_agents))]
+        leaders = [agent.Agent(self, type='leader', spawn_room=random.choice([room1, room2]), rationality=rationality) for i in range(int(leader_proportion*num_agents))]
         self.agents += leaders
         self.num_agents = num_agents
         self.running = True
@@ -77,16 +78,15 @@ class Model:
         return outside
 
     def run(self):
-        # outside = 0
         steps = 0
-        agents_outside = np.zeros((3000, 1))
+        agents_outside = np.full((5000, 1), len(self.agents))
         while self.running:
             outside = self.step(0)
             agents_outside[steps] = outside
             steps += 1
-            if outside == len(self.agents):
-                np.savetxt('results/wynik.csv', agents_outside, delimiter=' ')
-            self.clock.tick(self.render_settings['TARGET_FPS'])
+            if outside == len(self.agents) or steps == 4999:
+                return agents_outside
+            # self.clock.tick(self.render_settings['TARGET_FPS'])
 
     def get_agents_in_room(self, room):
         agents = []
@@ -97,5 +97,15 @@ class Model:
 
 
 if __name__ == '__main__':
-    model = Model(50)
-    model.run()
+    door_widths = [1, 1.25, 1.5, 1.75, 2]
+    rationalities = [0.01, None, 1]
+    leader_proportions = [0.025, 0.05, 0.1, 0.5]
+
+    for rationality in rationalities:
+        for leader_proportion in leader_proportions:
+            for door_width in door_widths: 
+                for i in range(10):                    
+                    model = Model(50, rationality=rationality, leader_proportion=leader_proportion, door_width=door_width)
+                    np.savetxt('results/i_' + str(i) + '_R_' + str(rationality) + '_DW_' + str(door_width) + '_LP_' + str(leader_proportion) + '.csv', model.run(), delimiter=' ')
+    
+    
