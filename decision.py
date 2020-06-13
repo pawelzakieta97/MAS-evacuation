@@ -99,22 +99,22 @@ class DecisionEngine:
             # rand = 0.5
             if rand<x:
                 path = self.ask_leader(current_room)
-                print('asking')
+                # print('asking')
             if rand>x+r*x:
                 path = self.follow_most(current_room)
-                print('following')
+                # print('following')
             if x < rand < x + r * x or path is None:
-                print('using knowledge')
+                # print('using knowledge')
                 path = self.get_path_A(current_room)
 
         if self.agent.type == 'leader':
             rand = random.random()
             if rand>self.rationality:
                 path = self.follow_most(current_room)
-                print('leader following')
+                # print('leader following')
             if rand<self.rationality or path is None:
                 path = self.get_path_A(current_room)
-                print('leader rational')
+                # print('leader rational')
         return path
 
     def ask_leader(self, current_room):
@@ -170,7 +170,7 @@ class DecisionEngine:
                 while s[1] in opened.keys():
                     s = heappop(considered)
             else:
-                print('no exit')
+                # print('no exit')
                 return
             adjacent_rooms = s[1].get_adjacent_rooms()
             for doorway, room in adjacent_rooms.items():
@@ -202,11 +202,11 @@ class DecisionEngine:
         if not has_danger_info:
             return
         shout_range = 2
-        print('shouting')
+        # print('shouting')
         self.agent.shouted = 10
         for agent in self.model.agents:
             if distance(self.agent.body.get_position(), agent.body.get_position())<shout_range:
-                print('\t informed')
+                # print('\t informed')
                 for key, value in self.knowledge.items():
                     if value==2:
                         if agent.decision_engine.knowledge[key] != value:
