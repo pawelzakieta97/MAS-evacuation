@@ -10,7 +10,7 @@ import agent
 
 
 class Model:
-    def __init__(self, num_agents=30, wrld=None, building=None, spawn=None, rationality=None, leader_proportion=0.05):
+    def __init__(self, num_agents=30, wrld=None, building=None, spawn=None, rationality=None, leader_proportion=0.05, door_width=None):
         self.render_settings = {'PPM': 20, 'SCREEN_HEIGHT': 480, 'SCREEN_WIDTH': 640,
                            'TARGET_FPS': 60, 'TIME_STEP': 1 / 60}
         self.screen = pygame.display.set_mode(
@@ -21,10 +21,18 @@ class Model:
 
         # --- pybox2d world setup ---
         # Create the world
+        if door_width is None:
+            door_width = 1.5
         if wrld is None and building is None:
             self.world = world(gravity=(0, 0), doSleep=True)
-            doorways = [Doorway((10, 8), 1.5), Doorway((10, 12), 1.5), Doorway((20, 5), 1.5),
-                        Doorway((20, 15), 1.5), Doorway((30, 5), 1.5), Doorway((15, 10), 1.5), Doorway((25, 10), 1.5), Doorway((30, 15), 1.5)]
+            doorways = [Doorway((10, 8), door_width),
+                        Doorway((10, 12), door_width),
+                        Doorway((20, 5), door_width),
+                        Doorway((20, 15), door_width),
+                        Doorway((30, 5), door_width),
+                        Doorway((15, 10), door_width),
+                        Doorway((25, 10), door_width),
+                        Doorway((30, 15), door_width)]
             room1 = create_room(self.world, 15, 0, 5, 10,
                                 east_doorways=[doorways[0], doorways[1]], name='r 1')
             room2 = create_room(self.world, 20, 10, 10, 20, west_doorways=[doorways[1]], #south_doorways=[doorways[5]],
