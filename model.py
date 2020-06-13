@@ -85,7 +85,7 @@ class Model:
             agents_outside[steps] = outside
             steps += 1
             if outside == len(self.agents):
-                np.savetxt('wynik.csv', agents_outside, delimiter=' ')
+                np.savetxt('results/wynik.csv', agents_outside, delimiter=' ')
             self.clock.tick(self.render_settings['TARGET_FPS'])
 
     def get_agents_in_room(self, room):
