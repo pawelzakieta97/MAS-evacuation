@@ -33,19 +33,19 @@ class Agent:
         velocity = self.body.get_velocity()
         self.avg_vel[0] = self.avg_vel[0]*0.9+0.1*velocity[0]
         self.avg_vel[1] = self.avg_vel[1] * 0.9 + 0.1 * velocity[1]
-        wkurfactor_threshold = 0.9
+        irritation_factor_threshold = 0.9
         if not self.current_room.is_outside:
             if self.avg_vel[0] ** 2 + self.avg_vel[1] ** 2 < 0.4:
-                self.decision_engine.wkurfactor = (1.2+299*self.decision_engine.wkurfactor)/300
+                self.decision_engine.irritation_factor = (1.2+299*self.decision_engine.irritation_factor)/300
             else:
-                self.decision_engine.wkurfactor = (299 * self.decision_engine.wkurfactor) / 300
-            if self.decision_engine.wkurfactor>wkurfactor_threshold:
+                self.decision_engine.irritation_factor = (299 * self.decision_engine.irritation_factor) / 300
+            if self.decision_engine.irritation_factor>irritation_factor_threshold:
                 self.decision_engine.knowledge[self.current_room.get_doorway(self.path[1][1])] = 3
                 self.path = None
-            if random.random()<self.decision_engine.wkurfactor*0.03:
+            if random.random()<self.decision_engine.irritation_factor*0.03:
                 self.decision_engine.shout()
 
-        update_room_prob = 0.05
+        update_room_prob = 0.01
         if random.random() < update_room_prob:
             updated_room = self.model.building.which_room(self.body.get_position())
             if updated_room != self.current_room:
@@ -76,7 +76,7 @@ class Agent:
                     break
 
     def draw(self, screen, render_settings):
-        wkur_multiplier = (1.5-self.decision_engine.wkurfactor)/2
+        wkur_multiplier = (1.5-self.decision_engine.irritation_factor)/2
         self.body.color = [self.body.base_color[0]*wkur_multiplier,
                            self.body.base_color[1]*wkur_multiplier,
                            self.body.base_color[2]*wkur_multiplier]

@@ -10,7 +10,7 @@ class DecisionEngine:
     def __init__(self, model, agent, rationality=None):
         self.model = model
         self.agent = agent
-        self.wkurfactor = 0
+        self.irritation_factor = 0
         if rationality is None:
             self.rationality = 0.1+random.random()*0.8
         else:
@@ -132,7 +132,7 @@ class DecisionEngine:
         # WYMIANA INFORMACJI O ZAGROZENIU
 
     def update(self, current_room):
-        self.wkurfactor = 0
+        self.irritation_factor = 0
         adjacent_rooms = current_room.get_adjacent_rooms()
         self.knowledge[current_room] = 1
         for room in adjacent_rooms.values():
@@ -194,8 +194,8 @@ class DecisionEngine:
                             and abs(opened[room] - (path[0][0] - cost))< 0.001:
                         path.insert(0, (opened[room], room))
                         break
-        if path[1][1].is_dangerous:
-            print('nic')
+        # if path[1][1].is_dangerous:
+        #     print('nic')
         return path
 
     def shout(self):
