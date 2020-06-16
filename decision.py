@@ -115,6 +115,8 @@ class DecisionEngine:
             if rand<self.rationality or path is None:
                 path = self.get_path_A(current_room)
                 # print('leader rational')
+        if path[1][1].is_dangerous:
+            return None
         return path
 
     def ask_leader(self, current_room):
@@ -146,7 +148,7 @@ class DecisionEngine:
                 additional_cost = 10000
             if self.agent.type == 'leader':
                 CPA = 0.2
-                # CPA*=10
+                CPA*=3
                 if src == current_room:
                     agents = self.model.get_agents_in_room(src)
                     for agent in agents:
@@ -192,6 +194,8 @@ class DecisionEngine:
                             and abs(opened[room] - (path[0][0] - cost))< 0.001:
                         path.insert(0, (opened[room], room))
                         break
+        if path[1][1].is_dangerous:
+            print('nic')
         return path
 
     def shout(self):

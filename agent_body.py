@@ -40,7 +40,8 @@ class AgentBody:
         self.apply_force(force, position)
 
     def maintain_force(self):
-        self.apply_force(self.prev_force, self.get_position())
+        # self.apply_force(self.prev_force, self.get_position())
+        self.apply_force([1,0], self.get_position())
 
     def get_position(self):
         return self.body.position

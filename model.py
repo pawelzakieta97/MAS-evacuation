@@ -7,7 +7,8 @@ import numpy as np
 from Box2D.b2 import (world, polygonShape, circleShape, staticBody, dynamicBody)
 import random
 import agent
-
+import matplotlib.pyplot as plt
+import numpy as np
 
 class Model:
     def __init__(self, num_agents=30, wrld=None, building=None, spawn=None, rationality=None, leader_proportion=0.05, door_width=None):
@@ -44,12 +45,12 @@ class Model:
                                 name='r 4')
             room5 = create_room(self.world, 10, 20, 0, 30, west_doorways=[doorways[2]], north_doorways=[doorways[6]],
                                 east_doorways=[doorways[4]], name='r 5')
-            # room1.is_dangerous = True
+            room3.is_dangerous = True
             self.building = Building(rooms=[room1, room2, room3, room4, room5],
                                      doorways=doorways)
             spawn = room1
 
-        self.agents = [agent.Agent(self, type='follower', spawn_room=random.choice([room1, room2]), rationality=rationality) for i in range(int((1-leader_proportion)*num_agents))]
+        self.agents = [agent.Agent(self, type='follower', spawn_room=random.choice([room1, room2, room4]), rationality=rationality) for i in range(int((1-leader_proportion)*num_agents))]
         leaders = [agent.Agent(self, type='leader', spawn_room=random.choice([room1, room2]), rationality=rationality) for i in range(int(leader_proportion*num_agents))]
         # self.agents = [agent.Agent(self, type='follower', spawn_room=spawn, rationality=rationality) for i in range(int((1-leader_proportion)*num_agents))]
         # leaders = [agent.Agent(self, type='leader', spawn_room=spawn, rationality=rationality) for i in range(int(leader_proportion*num_agents))]
@@ -100,18 +101,26 @@ class Model:
 
 
 if __name__ == '__main__':
-    model = Model(50, rationality=0.01, leader_proportion=0.05)
-    model.run()
-    
-    # door_widths = [1, 1.25, 1.5, 1.75, 2]
-    # rationalities = [0.01, None, 1]
-    # leader_proportions = [0.025, 0.05, 0.1, 0.5]
+    model = Model(90, rationality=None, leader_proportion=0.1)
+    results = model.run()
+    fig, ax = plt.subplots()
+    ax.step(np.arange(len(results))/60, results, where='post')
 
-    # for rationality in rationalities:
-    #     for leader_proportion in leader_proportions:
-    #         for door_width in door_widths: 
-    #             for i in range(10):                    
-    #                 model = Model(50, rationality=rationality, leader_proportion=leader_proportion, door_width=door_width)
-    #                 np.savetxt('results/i_' + str(i) + '_R_' + str(rationality) + '_DW_' + str(door_width) + '_LP_' + str(leader_proportion) + '.csv', model.run(), delimiter=' ')
-    
-    
+    # ax.legend()
+    ax.grid()
+    ax.set_xlabel(r'$t \ (\mathrm{s})$')
+    ax.set_ylabel('agents escaped')
+    fig.tight_layout()
+    fig.savefig(f"results/prez1.pdf")
+
+    model = Model(90, rationality=1, leader_proportion=0.1)
+    results = model.run()
+    fig, ax = plt.subplots()
+    ax.step(np.arange(len(results)) / 60, results, where='post')
+
+    # ax.legend()
+    ax.grid()
+    ax.set_xlabel(r'$t \ (\mathrm{s})$')
+    ax.set_ylabel('agents escaped')
+    fig.tight_layout()
+    fig.savefig(f"results/prez2.pdf")
